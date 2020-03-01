@@ -1,0 +1,14 @@
+name: "PlayerControl"
+main: ru.ragnok123.playerControl.PlayerControl
+version: 1.0
+depend: ["MenuAPI"]
+api: ["1.0.0"]
+author: Ragnok123
+permissions:
+  pc.command:
+    default: op
+    description: "PlayerControl permission"
+  pc.cmd:
+    default: no
+    description: "Use this permission to handle command execution"
+    
