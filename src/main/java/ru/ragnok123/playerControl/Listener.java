@@ -11,15 +11,21 @@ import cn.nukkit.event.player.PlayerAnimationEvent;
 import cn.nukkit.event.player.PlayerChatEvent;
 import cn.nukkit.event.player.PlayerCommandPreprocessEvent;
 import cn.nukkit.event.player.PlayerInteractEvent;
+import cn.nukkit.event.player.PlayerInteractEvent.Action;
 import cn.nukkit.event.player.PlayerMoveEvent;
 import cn.nukkit.event.player.PlayerQuitEvent;
+import cn.nukkit.event.server.DataPacketReceiveEvent;
+import cn.nukkit.inventory.transaction.data.UseItemData;
 import cn.nukkit.item.Item;
+import cn.nukkit.math.BlockVector3;
 import cn.nukkit.network.protocol.AnimatePacket;
+import cn.nukkit.network.protocol.DataPacket;
+import cn.nukkit.network.protocol.InventoryTransactionPacket;
 import cn.nukkit.permission.PermissionAttachment;
 import ru.ragnok123.menuAPI.inventory.InventoryCategory;
 import ru.ragnok123.menuAPI.inventory.InventoryMenu;
-import ru.ragnok123.menuAPI.inventory.ItemClick;
-import ru.ragnok123.menuAPI.inventory.ItemData;
+import ru.ragnok123.menuAPI.inventory.item.ItemClick;
+import ru.ragnok123.menuAPI.inventory.item.ItemData;
 
 public class Listener implements cn.nukkit.event.Listener{
 	
@@ -39,7 +45,7 @@ public class Listener implements cn.nukkit.event.Listener{
 		if(PlayerControl.getInstance().isUnderControll(p)) {
 		} else if(PlayerControl.getInstance().isControlling(p)) {
 			e.setCancelled();
-			p.getServer().getPluginManager().callEvent(new PlayerInteractEvent(PlayerControl.getInstance().getControlByController(p).getVictim(),e.getItem(),e.getTouchVector(),e.getFace(),e.getAction()));
+			//p.getServer().getPluginManager().callEvent(new PlayerInteractEvent(PlayerControl.getInstance().getControlByController(p).getVictim(),e.getItem(),e.getTouchVector(),e.getFace(),e.getAction()));
 		}
 	}
 	
@@ -88,6 +94,31 @@ public class Listener implements cn.nukkit.event.Listener{
 				p.removeAttachment(co.permC);
 			}
 		}
+	}
+	
+	@EventHandler
+	public void getPacket(DataPacketReceiveEvent e) {
+		Player p = e.getPlayer();
+		DataPacket pk = e.getPacket();
+		if(pk instanceof InventoryTransactionPacket) {
+			InventoryTransactionPacket packet = (InventoryTransactionPacket)pk;
+			if(PlayerControl.getInstance().isControlling(p)) {
+				Player victim = PlayerControl.getInstance().getControlByController(p).getVictim();
+				switch(packet.transactionType) {
+				case InventoryTransactionPacket.TYPE_USE_ITEM:
+						UseItemData data = (UseItemData)packet.transactionData;
+						BlockVector3 vec = data.blockPos;
+						switch(data.actionType) {
+						case InventoryTransactionPacket.USE_ITEM_ACTION_CLICK_AIR:
+							PlayerInteractEvent ev = new PlayerInteractEvent(victim,p.getInventory().getItemInHand(),p.getDirectionVector(),data.face,Action.RIGHT_CLICK_AIR);
+							p.getServer().getPluginManager().callEvent(ev);
+							break;
+						}
+					break;
+				}
+			}
+		}
+	
 	}
 	
 	@EventHandler
